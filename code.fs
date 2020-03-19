@@ -65,6 +65,10 @@ let rec partition p = function
                else
                  (l,      y :: r)
 
+partition 5 [3; 4; 5; 6; 7]
+
+
+
 let rec sort = function
   | []        -> []
   | [x]       -> [x]
