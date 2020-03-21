@@ -82,6 +82,24 @@ let rec isWeaklyAscending(xs) =
 isWeaklyAscending([1;2])
 
 
-let rec count(x, ys) = 
+
+//5b
+let rec count (x, ys) = 
   match ys with
-    |
+    |[]      -> 0 
+    |y0 :: y1 :: ys -> if  x = y0 then
+                         if y1 > x then 1
+                         else 1 + count(x, y1::ys)
+                        else count(x, y1::ys)
+
+
+count(2, [1;2;2;2;3;3;4])
+
+
+
+
+                           
+                    
+
+
+    
