@@ -63,11 +63,9 @@ let rec partition p = function
                if y <= p then
                  (y :: l, r)
                else
-                 (l,      y :: r)
+                 (l, y :: r)
 
-partition 5 [3; 4; 5; 6; 7]
-
-
+               
 
 let rec sort = function
   | []        -> []
