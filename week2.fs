@@ -98,8 +98,29 @@ count(2, [1;2;2;2;3;3;4])
 
 
 
-                           
-                    
+let rec mix = function
+  |(x::xs, y::ys) -> x::y::mix (xs,ys)
+  |([],[]) -> []
+  |_ -> failwith "mix: parameter error"
+mix ([1;2],[4;5])
+
+(* 
+mix (1::2::[], 4::5::[]) ---> 1::4::2::5::[]
+mix(2::[], 5::[])        ---> 2::5::[]
+mix([], [])              ---> []
+ *)
+
+//5c
+                                                  
+
+let rec intersect = function
+  |(ys, []) -> []  
+  |([], xs) -> []  
+  |(x::xs, y::ys) -> if x = y then x::intersect(xs, y::ys)
+                     else if x < y then intersect(xs, y::ys)  
+                     else intersect (x::xs, ys)  
+
+intersect ([1; 2; 3; 3; 5;], [1; 1; 3; 3; 3])
 
 
-    
+let re
