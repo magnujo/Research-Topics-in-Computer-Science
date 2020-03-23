@@ -70,5 +70,19 @@ let rec partition p = function
 let rec sort = function
   | []        -> []
   | [x]       -> [x]
-  | p :: xs   -> let (l,r) = partition p xs
-                 sort l @ [p] @ sort r
+  | x :: xs   -> let (l,r) = partition x xs
+                 sort l @ [x] @ sort r
+
+sort [2;1;10;5;4;33]
+
+(* 
+sort 2::1::[] --> (l,r) = partition 2 1::[] = (1::[], [])
+                         sort l @ 2 @ sort r = sort 1::[] @ 2 @ sort [] = 1::[] @ 2 @ [] = 1::2::[]
+partition 2 1::[] --> (l, r) = partition 2 [] =([], [])
+                      (1::l, r) = (1::[], [])
+partition 2 [] ---> ([], [])
+
+sort 1::[] --> 1::[]
+sort [] --> []
+ *)
+

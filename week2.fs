@@ -19,9 +19,6 @@ let rec sum(p, xs) =
     |[]         -> 0 
     |x :: xs    -> if p x = true then 1 + sum(p, xs) else sum(p, xs)
 
-
-let p x = x>0
-
 sum(p, [2;1;3;1;1])
                       
 
@@ -29,23 +26,23 @@ sum(p, [2;1;3;1;1])
 
 let rec split = function
   |[]      -> ([], [])
-  |[y]     ->  y
+  |[y]     -> ([], [y])
   |y0 :: y1 :: ys -> let (l, r) = split ys 
                      (y0::l, y1::r)
                
-split [1;2;3;4]
+split [1;10;2;3;4;5]
 
 
 
 
 (* 
-split 1::2::3::4[] ---> (l, r) = split 3::4::[] = (3::[], 4::[])
-                          (y0::l, y1::r) = (1::l, 2::r) = (1::3::[], 2::4::[])
+split 1::2::3::4::5[] ---> (l, r) = split 3::4::5[] = (3::[], 4::5[])
+                          (y0::l, y1::r) = (1::3::[], 2::4::5::[]) 
 
-split 3::4::[]       ---> (l, r) = split [] = ([], [])
-                          (y0::l, y1::r) = (3::l, 4::r) = (3::[], 4::[])
+split 3::4::5[]       ---> (l, r) = split 5::[] = ([], 5::[])
+                           (y0::l, y1::r) = (3::l, 4::r) = (3::[], 4::5[])
 
-split []             ---> ([], [])
+split 5::[]             ---> ([], 5::[])
 
 *)
 
@@ -98,17 +95,6 @@ count(2, [1;2;2;2;3;3;4])
 
 
 
-let rec mix = function
-  |(x::xs, y::ys) -> x::y::mix (xs,ys)
-  |([],[]) -> []
-  |_ -> failwith "mix: parameter error"
-mix ([1;2],[4;5])
-
-(* 
-mix (1::2::[], 4::5::[]) ---> 1::4::2::5::[]
-mix(2::[], 5::[])        ---> 2::5::[]
-mix([], [])              ---> []
- *)
 
 //5c
                                                   
@@ -122,5 +108,53 @@ let rec intersect = function
 
 intersect ([1; 2; 3; 3; 5;], [1; 1; 3; 3; 3])
 
+//5d
+let rec union = function 
+  |([], []) -> []
+  |(xs, []) -> xs
+  |([], ys) -> ys
+  |(x::xs, y::ys) -> if x = y then x::y::union(xs,ys)
+                     else if x < y then x::union(xs, y::ys)
+                     else y::union(x::xs, ys)
 
-let re
+
+union ([2; 2; 2; 3; 3; 5; 8], [1; 3; 3; 3; 4; 5; 10])
+
+
+//[1; 2; 3; 3; 3; 3; 3; 4; 5; 5; 8]
+
+//6
+
+let rec split = function
+  |[]      -> ([], [])
+  |[y]     -> ([], [y])
+  |y0 :: y1 :: ys -> let (l, r) = split ys 
+                     (y0::l, y1::r)             
+               
+let rec union = function 
+  |([], []) -> []
+  |(xs, []) -> xs
+  |([], ys) -> ys
+  |(x::xs, y::ys) -> if x = y then x::y::union(xs,ys)
+                     else if x < y then x::union(xs, y::ys)
+                     else y::union(x::xs, ys)
+
+
+let rec mergesort = function
+  | []              -> []
+  | [x]             -> [x]
+  | x0 :: x1:: xs   -> let (l,r) = split xs
+                       if x0 > x1 then mergesort l @ mergesort r
+                       else mergesort l @ [x1] @ mergesort r
+                       
+                  
+
+
+mergesort [2;1]
+
+(* 
+mergesort 1::10::2::3::5::5::[] --> (l,r) = split 1::10::2::3::5::5::[] = (1::2::5::[], 10::3::5::[]
+                                       mergesort l @ mergesort r = 1::2::5::10::3::5::[]
+split 1::10::2::3::5::5::[] --> (1::2::5::[], 10::3::5::[])
+ *)
+
