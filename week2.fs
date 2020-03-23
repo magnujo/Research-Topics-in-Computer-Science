@@ -140,21 +140,27 @@ let rec union = function
                      else y::union(x::xs, ys)
 
 
+
 let rec mergesort = function
-  | []              -> []
-  | [x]             -> [x]
-  | x0 :: x1:: xs   -> let (l,r) = split xs
-                       if x0 > x1 then mergesort l @ mergesort r
-                       else mergesort l @ [x1] @ mergesort r
-                       
-                  
+  | []   -> []
+  | [x]  -> [x]
+  | xs   -> let (l, r) = split xs
+            union (mergesort l) (mergesort r)
 
 
-mergesort [2;1]
-
+mergesort [2;3;1;10;4]
 (* 
-mergesort 1::10::2::3::5::5::[] --> (l,r) = split 1::10::2::3::5::5::[] = (1::2::5::[], 10::3::5::[]
-                                       mergesort l @ mergesort r = 1::2::5::10::3::5::[]
-split 1::10::2::3::5::5::[] --> (1::2::5::[], 10::3::5::[])
- *)
+mergesort 2::3::1::10::4::[] --> (l, r) = split 2::3::1::10::4::[]
+                                  union (mergesort l) (mergesort r)
 
+split 2::3::1::10::4::[] -->  l = 2::1::4::[] r = 3::10::[]
+union (mergesort 2::1::4::[]) (mergesort 3::10::[]) = union (1::2::4::[]) (3::10::[]) = 1::2::3::4::10::[]
+
+mergesort 2::1::4::[] --> union (mergesort 2::4::[]) (mergesort 1::[]) = union (2::4::[]) (1::[]) = 1::2::4::[]
+mergesort 2::4::[] --> union (mergesort 2::[]) (mergesort 4::[]) == union (2::[])(4::[]) = 2::4[]
+mergesort 1::[] --> 1::[]
+mergesort 2::[]
+
+(mergesort 3::10::[]) --> union (3::[])(10::[])
+
+ *)
