@@ -25,7 +25,7 @@ let rec eval env = function
   | VAR x           -> lookup x env
   | LET (x, e1, e2) -> let v1 = eval env e1
                        eval ((x, v1) :: env) e2
-
+eval [] (ADD(INT 1, INT 2))
 // Instructions
 
 type inst = | IPUSH   of int
@@ -73,3 +73,10 @@ let rec comp env = function
                        comp (x  :: env) e2 @
                        [ISWAP]             @
                        [IPOP]
+comp ["h"; "g"] (ADD(INT 1, VAR "h"))
+
+exec [IPUSH 1; IGET 0; IADD] []
+
+comp ["h"; "g"] INT 1 @ comp (""::"h"::"g") VAR "h" @ [IADD]
+comp INT 1 = [IPUSH 1]
+comp VAR "h" = [IGET 1]
