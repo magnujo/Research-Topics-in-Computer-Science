@@ -9,6 +9,7 @@ type exp     = | INT     of int
                | LET     of varname * exp * exp
                | EQ      of exp * exp
                | IF      of exp * exp * exp
+               | LT      of exp * exp
 
 // Interpreter
                
@@ -24,7 +25,7 @@ let rec eval env = function
   | LET (x, e1, e2) -> let v1 = eval env e1
                        eval ((x, v1) :: env) e2
   | EQ (e1, e2)     -> if eval env e1 = eval env e2 then 1 else 0
-  | IF (e1, e2, e3) -> // Exercise
+  | IF (e1, e2, e3) -> if eval env e1 = 1 then eval env e2 else eval env e3
   
 // Instructions
 
