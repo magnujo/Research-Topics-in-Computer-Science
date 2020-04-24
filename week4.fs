@@ -42,3 +42,7 @@ IADD        9
 
 //5a
 
+type 'a tree = | LEAF
+               | NODE of 'a * 'a tree * 'a tree 
+
+let treemap f tree = 

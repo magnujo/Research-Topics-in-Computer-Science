@@ -2,7 +2,7 @@
 
 
 (* type 'a tree = | LEAF
-               | NODE of 'a * 'a tree * 'a tree *)
+                  | NODE of 'a * 'a tree * 'a tree *)
 
 
 let t = NODE(5, NODE(3, LEAF, NODE(2, LEAF, LEAF)), NODE(1, NODE(4, LEAF, LEAF), LEAF))

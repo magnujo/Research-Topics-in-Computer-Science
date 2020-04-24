@@ -58,7 +58,7 @@ let rec varpos x = function
   | y :: env -> if x = y then 0 else 1 + varpos x env
 
 let rec comp env = function
-  | INT i           -> [IPUSH i]
+  | INT i           -> [IPUSH i] 
   | ADD (e1, e2)    -> comp env         e1 @
                        comp ("" :: env) e2 @
                        [IADD]
