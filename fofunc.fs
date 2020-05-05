@@ -1,4 +1,8 @@
-module FoFunc
+module Fofunc
+open Parser 
+open VM
+
+let Parser = #r "parser.dll"
 
 // AST of a language with functions
 
@@ -22,10 +26,50 @@ let evalProg (funcs, e) =
     | INT i           -> i
     | ADD (e1, e2)    -> eval env e1 + eval env e2
     | VAR x           -> lookup x env
-    | CALL (f, e)     -> let v = eval env e
-                         let (x, body) = lookup f funcs
-                         eval [(x, v)] body
-  eval [] e
+    | CALL (f, e)     -> let v = eval env e              // evaluates the input to the function, which can be a sequence of exps (fx ADD(INT, INT)) 
+                         let (x, body) = lookup f funcs  // look for the function in the function env. Fx lookup "foo" in [("foo", ("x", ADD (VAR "x", INT 42)))] and add the variable name "x" to x and ADD (VAR "x", INT 42) to body
+                         eval [(x, v)] body              // evaluate with a small environment only containing the "x" bound to v which fx evaluates to 8 in the below example. With this env it evaluates the body which is fx ADD(VAR "x", INT 42). This evaluation will lookup the "x" in the env and find the value 8 and add it to 42.
+  eval [] e                                              // ??
+
+evalProg ([("foo", ("x", ADD (VAR "x", INT 42)))], CALL("foo", ADD(INT 4, INT 4))) 
+
+
+
+type varname  = string
+type funcname = string
+type exp      = | INT     of int             // i
+                | ADD     of exp * exp       // e1 + e2
+                | VAR     of varname         // x
+                | CALL    of funcname * exp list  // f ( e )                
+type func     = funcname * (varname * exp list)   // func f ( x ) = e
+
+// Interpreter
+
+type 'a env = (varname * 'a) list
+let rec lookup x = function
+  | []            -> failwith ("unbound: " + x)
+  | (y, w) :: env -> if x = y then w else lookup x env
+
+let evalProg (funcs, e) = 
+  let rec eval env = function
+    | INT i              -> i
+    | ADD (e1, e2)       -> eval env e1 + eval env e2
+    | VAR x              -> lookup x env
+    | CALL (f, [e1])     -> let v = eval env e1                              // evaluates the input to the function, which can be a sequence of exps (fx ADD(INT, INT)) 
+                            let ([x], body) = lookup f funcs                // look for the function in the function env. Fx lookup "foo" in [("foo", ("x", ADD (VAR "x", INT 42)))] and add the variable name "x" to x and ADD (VAR "x", INT 42) to body
+                            eval [(x, v)] body     
+    | CALL (f, [e1; e2]) -> let v1 = eval env e1  
+                            let v2 = eval env e2 
+                            let ([x; k], body) = lookup f funcs
+                            eval [(x, v1); (k, v2)] body                       
+  eval [] e                                              
+
+//evalProg ([("foo", (["x"], ADD (VAR "x", INT 6)))], CALL("foo", [INT 6]))
+
+// foo(x, y) = x + y 
+// foo(4, 8) = 4 + 8
+
+
 
 // Instructions
 
@@ -75,32 +119,111 @@ let rec varpos x = function
   | []       -> failwith ("unbound: " + x)
   | y :: env -> if x = y then 0 else 1 + varpos x env
 
+
+
+let rec comp fenv env = function // compiles expressions
+  | INT i               -> [IPUSH i]
+  | ADD (e1, e2)        -> comp fenv env         e1 @  //comp fenv ["", "x"] VAR "X" ->  IGET 1
+                           comp fenv ("" :: env) e2 @  //comp fenv ["", "", "x"] INT 42  -> IPUSH 42
+                           [IADD]                      // [IGET1, IPUSH 42, IADD]
+  | VAR x               -> [IGET (varpos x env)]
+  | CALL (f, [a1])      -> let lr = newLabel()    //lr = 1 
+                           let lf = lookup f fenv // lf = 0
+                           comp fenv env a1  @     // comp fenv [] INT 8 -> [IPUSH 8]
+                           [ICALL lf]       @     // [ICALL 0]
+                           [ILAB lr]        @     // [ILAB 1]                       
+                           [ISWAP]          @     // [ISAWP]
+                           [IPOP]                 // [IPOP]                         [IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP]
+
+  
+
+let compProg (funcs, e1) = // compiles functions
+  let fenv = List.map (fun (f, _) -> (f, newLabel())) funcs
+  let rec compFuncs = function
+    | []                      -> comp fenv [] e1 @        // compiles the argument that is passed into the function, which also calles the function body with ICALL 
+                                 [IHALT]                  // [IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT]  
+    | (f, (([x], a1)) :: funcs -> let lf = lookup f fenv   //lf = 0
+                                 compFuncs funcs     @    //[IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT]
+                                 [ILAB lf]           @    //[IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT, ILAB 0]
+                                 comp fenv [""; x] a1 @   //[IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT, ILAB 0, IGET1, IPUSH 42, IADD]  - compiles instructions for the body of the function (the calculations)
+                                 [ISWAP]             @    //[IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT ILAB 0, IGET1, IPUSH 42, IADD, ISWAP]
+                                 [IRETN]                  //[IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT, ILAB 0, IGET 1, IPUSH 42, IADD, ISWAP, IRETN]
+  compFuncs funcs                                         //[IPUSH 8; ICALL 0; ILAB 1; ISWAP; IPOP; IHALT; ILAB 0; IGET 1; IPUSH 42; IADD; ISWAP; IRETN]
+
+
+
+compProg ([("foo", ("x", [ADD (VAR "x", INT 42)]))], CALL("foo", [INT 8])) 
+
+
+(* 
 let rec comp fenv env = function
-  | INT i           -> [IPUSH i]
-  | ADD (e1, e2)    -> comp fenv env         e1 @
-                       comp fenv ("" :: env) e2 @
-                       [IADD]
-  | VAR x           -> [IGET (varpos x env)]
-  | CALL (f, e)     -> let lr = newLabel()  //auto generates label number
-                       let lf = lookup f fenv //
-                       comp fenv env e  @
-                       [ICALL lf]       @
-                       [ILAB lr]        @
-                       [ISWAP]          @
-                       [IPOP]
+  | INT i               -> [IPUSH i]
+  | ADD (e1, e2)        -> comp fenv env         e1 @  //comp fenv ["", "x"] VAR "X" ->  IGET 1
+                           comp fenv ("" :: env) e2 @  //comp fenv ["", "", "x"] INT 42  -> IPUSH 42
+                           [IADD]                      // [IGET1, IPUSH 42, IADD]
+  | VAR x               -> [IGET (varpos x env)]
+  | CALL (f, [a1])      -> let lr = newLabel()    //lr = 1 
+                           let lf = lookup f fenv // lf = 0
+                           comp fenv env a1  @     // comp fenv [] INT 8 -> [IPUSH 8]
+                           [ICALL lf]       @     // [ICALL 0]
+                           [ILAB lr]        @     // [ILAB 1]                       
+                           [ISWAP]          @     // [ISAWP]
+                           [IPOP]                 // [IPOP]                         [IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP]
+
+  
 
 let compProg (funcs, e1) =
   let fenv = List.map (fun (f, _) -> (f, newLabel())) funcs
   let rec compFuncs = function
-    | []                   -> comp fenv [] e1 @
-                              [IHALT]
-    | (f, (x, e)) :: funcs -> let lf = lookup f fenv
-                              compFuncs funcs     @
-                              [ILAB lf]           @
-                              comp fenv [""; x] e @
-                              [ISWAP]             @
-                              [IRETN]
-  compFuncs funcs
+    | []                      -> comp fenv [] e1 @     // compiles the argument that is passed into the function, which also calles the function body with ICALL 
+                                 [IHALT]               // [IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT]  
+    | (f, (x, [a1])) :: funcs -> let lf = lookup f fenv  //lf = 0
+                                 compFuncs funcs     @   //[IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT]
+                                 [ILAB lf]           @   //[IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT, ILAB 0]
+                                 comp fenv [""; x] a1 @   //[IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT, ILAB 0, IGET1, IPUSH 42, IADD]  - compiles instructions for the body of the function (the calculations)
+                                 [ISWAP]             @   //[IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT ILAB 0, IGET1, IPUSH 42, IADD, ISWAP]
+                                 [IRETN]                 //[IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT, ILAB 0, IGET 1, IPUSH 42, IADD, ISWAP, IRETN]
+  compFuncs funcs                                        //[IPUSH 8; ICALL 0; ILAB 1; ISWAP; IPOP; IHALT; ILAB 0; IGET 1; IPUSH 42; IADD; ISWAP; IRETN]
+
+
+compProg ([("foo", ("x", [ADD (VAR "x", INT 42)]))], CALL("foo", [INT 8]))  *)
+
+// It compiles the expression (e) into a push of the function argument (in this case PUSH 8). Appends a call inst to the function calculation, 
+// aswell as a return label, to return to when the function calculation is done (in this case ICALL 0). The swap and pop i appended to get rid of the function argument. 
+// Appends the ILAB for the function body calculation and appends instrunctions for the functions body after that ILAB. After the body is executed, the value of the body is 
+//on top of the stack, and the return label is on position 1, therefore the ISWAP. 
+
+
+(* 
+[IPUSH 8;  8
+ICALL 0;   
+ILAB 1;    1 8
+ISWAP;     8 50
+IPOP;      50 
+IHALT; 
+ILAB 0;    
+IGET 1;    8 1 8
+IPUSH 42;  42 8 1 8
+IADD;      50 1 8
+ISWAP;     1 50 8
+IRETN    
+ *)
+
+
+(*    | CALL (f, [e1])     -> let lr = newLabel()
+                           let lf = lookup f fenv
+                           comp fenv env e1 @
+                           [ICALL lf]       @
+                           [ILAB lr]        @
+                           [ISWAP]          @
+                           [IPOP] *)
+
+(*  | (f, (x, [e1])) :: funcs -> let lf = lookup f fenv 
+                                 compFuncs funcs      @
+                                 [ILAB lf]            @
+                                 comp fenv [""; x] e1 @
+                                 [ISWAP]
+                                 [IRETN] *)
 
 // Example:
 //
@@ -144,3 +267,4 @@ let ins = [
 //     IADD
 //     ISWAP
 //     IRETN
+
