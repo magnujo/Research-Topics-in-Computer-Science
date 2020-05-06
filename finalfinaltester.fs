@@ -1,7 +1,7 @@
-// module Final2
 
 //open Parser
 //open VM 
+
 
 type varname  = string
 type funcname = string
@@ -26,7 +26,6 @@ type exp      = | INT     of int                  // i
                                  
 type func     = funcname * (varname list * exp)      // func f ( x ) = e
 
-//let s = parseProgFromString "1+2"
 
 type 'a env = (varname * 'a) list
 let rec lookup x = function
@@ -51,14 +50,7 @@ let evalProg (funcs, e) =
     | GE (e1, e2)        -> if eval env e1 >= eval env e2 then 1 else 0
     | IF (e1, e2, e3)    -> if eval env e1 = 1 then eval env e2 else eval env e3                    //tjek op 
     | OR (e1, e2)        -> if eval env e1 = 1 then 1 else eval env e2                              //tjek op
-    | AND (e1, e2)       -> if eval env e1 = 1 then (if eval env e2 = 1 then 1 else 0) else 0                            //tjek op  if e1 then e2 else 0
-    | CALL (f, [e1])     -> let v = eval env e1                              // evaluates the input to the function, which can be a sequence of exps (fx ADD(INT, INT)) 
-                            let ([x], body) = lookup f funcs                // look for the function in the function env. Fx lookup "foo" in [("foo", ("x", ADD (VAR "x", INT 42)))] and add the variable name "x" to x and ADD (VAR "x", INT 42) to body
-                            eval [(x, v)] body     
-    | CALL (f, [e1; e2]) -> let v1 = eval env e1  
-                            let v2 = eval env e2 
-                            let ([x; k], body) = lookup f funcs
-                            eval [(x, v1); (k, v2)] body       
+    | AND (e1, e2)       -> if eval env e1 = 1 then (if eval env e2 = 1 then 1 else 0) else 0                            //tjek op  if e1 then e2 else 0     
     | CALL (f, es)       -> let rec bind xs es =
                                 match (xs, es) with
                                   |([], []) -> []
@@ -66,13 +58,14 @@ let evalProg (funcs, e) =
                                                          (x, v) :: bind xs es
                             let (xs, body) = lookup f funcs
                             eval (bind xs es) body                                          
-  eval [] e                                              
-//evalProg s
-//let run s = evalProg (parseProgFromString s)
-//evalProg([], OR(EQ(INT 2, INT 1), EQ(INT 20, INT 20)))
+  eval [] e   
 
+(* let fourExp = ([("foo", (["x"; "y"; "z"; "q"], ADD (ADD(VAR "x", VAR "y"), ADD(VAR "z", VAR "q"))))], CALL("foo", [INT 6; INT 5; INT 2; INT 100]))
+let thrExp = ([("foo", (["x"; "y"; "z"], ADD (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
+let twoExp = ([("foo", (["x"; "y"], ADD (VAR "x", VAR "y")))], CALL("foo", [INT 6; INT 5])) // <
+let oneExp = ([("foo", (["x"], ADD (VAR "x", INT 1)))], CALL("foo", [INT 6]))
 
-//evalProg ([("foo", (["x"; "y"; "z"], ADD (MUL(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
+evalProg fourExp *)
 
 type label = int
 type inst  = | IHALT
@@ -92,7 +85,7 @@ type inst  = | IHALT
              | ICALL   of label
              | ILAB    of label
              | IRETN
-    
+
 // Virtual machine
 
 let private get = List.item
@@ -128,7 +121,7 @@ let execProg prog st =
       | (IRETN     :: _,    l :: st)      -> exec (find l prog) st
       | _                                 -> failwith "error executing code"
   exec prog st
-
+                                   
 
 let mutable labelCounter = 0
 let newLabel _ =
@@ -139,7 +132,6 @@ let newLabel _ =
 let rec varpos x = function
   | []       -> failwith ("unbound: " + x)
   | y :: env -> if x = y then 0 else 1 + varpos x env
-
 
 
 let rec comp fenv env = function                       // compiles function arg and function calc
@@ -187,7 +179,7 @@ let rec comp fenv env = function                       // compiles function arg 
                            [IPUSH 0] @
                            [IJMP le]    @
                            [ILAB l2]    @
-                           comp fenv ("":: env) e2  @
+                           comp fenv ("" :: env) e2  @
                            [ILAB le]  
   | OR (e1, e2)         -> let l2 = newLabel()          //kan også laves som MUL
                            let le = newLabel()
@@ -197,7 +189,7 @@ let rec comp fenv env = function                       // compiles function arg 
                            [IJMP le]    @
                            [ILAB l2]    @
                            [IPUSH 1]    @
-                           [ILAB le]                                                           
+                           [ILAB le]                               
   | LET (x, e1, e2)     -> comp fenv env        e1 @
                            comp fenv (x :: env) e2 @
                            [ISWAP]            @
@@ -210,7 +202,7 @@ let rec comp fenv env = function                       // compiles function arg 
                            [IJMP le]    @
                            [ILAB l2]    @
                            comp fenv env e2  @
-                           [ILAB le]                                        
+                           [ILAB le]                                      
   | CALL (f, es)        -> 
                            let rec bind (es, spl) lr lf =
                              match (es, spl) with
@@ -218,10 +210,7 @@ let rec comp fenv env = function                       // compiles function arg 
                                | (e::es, spl)    -> comp fenv env e @ bind (es, [ISWAP]@[IPOP]@spl) lr lf                                                                                   
                            let lr = newLabel()                      
                            let lf = lookup f fenv
-                           bind (es, []) lr lf                                                                   
-                           
-                                       
-                                          
+                           bind (es, []) lr lf                 
   
 
 let compProg (funcs, e1) = // compiles functions
@@ -235,21 +224,21 @@ let compProg (funcs, e1) = // compiles functions
                                       comp fenv (""::x::xs) e  @    
                                       [ISWAP]                  @    
                                       [IRETN]                       
-  compFuncs funcs                                          
+  compFuncs funcs       
 
 
 
-//let anda = compProg ([], IF(OR(EQ(INT 2, INT 2), EQ(INT 3, INT 4)), INT 4, INT 6))
-//let neg = compProg ([], NEG(INT 15))
+let anda = compProg ([], IF(OR(EQ(INT 2, INT 2), EQ(INT 3, INT 4)), INT 4, INT 6))
+let neg = compProg ([], NEG(INT 15))
 
-//let eq = compProg ([], IF(EQ(INT 1, INT 2), INT 4, INT 2))
+let eq = compProg ([], IF(EQ(INT 1, INT 2), INT 4, INT 2))
 
-//let exL2 = compProg ([("foo", (["x"; "y"; "z"], MUL (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 10; INT 42; INT 11]))  
+let exL2 = compProg ([("foo", (["x"; "y"; "z"], MUL (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 10; INT 42; INT 11]))  
 
-//let exL1 = compProg ([("foo", (["x"], ADD (VAR "x", INT 42)))], CALL("foo", [INT 8]))          //<- works
+let exL1 = compProg ([("foo", (["x"], ADD (VAR "x", INT 42)))], CALL("foo", [INT 8]))          //<- works
 
 let exL = compProg ([("foo", (["x"; "y"], ADD (VAR "x", VAR "y")))], CALL("foo", [INT 10; INT 42]))  
         
 
  
-execProg exL []
+execProg exL2 []
