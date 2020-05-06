@@ -180,9 +180,15 @@ let rec comp fenv env = function                       // compiles function arg 
   | GE (e1, e2)         -> comp fenv env         e2 @
                            comp fenv ("" :: env) e1 @
                            [ILE]                                                              
-  | AND (e1, e2)        -> comp fenv env         e1 @
-                           comp fenv ("" :: env) e2 @
-                           [ILT]                              
+  | AND (e1, e2)        -> let l2 = newLabel()
+                           let le = newLabel()
+                           comp fenv env e1  @
+                           [IJMPIF l2]  @
+                           comp fenv env e3 @
+                           [IJMP le]    @
+                           [ILAB l2]    @
+                           comp fenv env e2  @
+                           [ILAB le]                                  
   | LET (x, e1, e2)     -> comp fenv env        e1 @
                            comp fenv (x :: env) e2 @
                            [ISWAP]            @

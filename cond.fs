@@ -1,4 +1,4 @@
-module Cond
+//module Cond
 
 // AST of a language with if expressions
 
@@ -52,23 +52,25 @@ let rec find l = function
   | (ILAB l' :: ins) -> if l = l' then ins else find l ins
   | (_       :: ins) -> find l ins
 
+//  [IPUSH 1; IPUSH 2; IEQ; IJMPIF 0; IPUSH 4; IJMP 1; ILAB 0; IPUSH 3; ILAB 1]
+
 let execProg prog st =
   let rec exec ins st =
     match (ins, st) with
-      | ([],                v :: _)       -> v
+      | ([],                v :: _)       -> v                //4
       | (IHALT     :: _,    v :: _)       -> v
-      | (IPUSH i   :: ins,  st)           -> exec ins (i :: st)
-      | (IGET p    :: ins,  st)           -> exec ins (get p st :: st)
+      | (IPUSH i   :: ins,  st)           -> exec ins (i :: st)           //4, 2, 1  //2, 1  // 1
+      | (IGET p    :: ins,  st)           -> exec ins (get p st :: st)      
       | (IADD      :: ins,  y :: x :: st) -> exec ins (x + y :: st)
       | (IEQ       :: ins,  y :: x :: st) ->
-        if x = y then exec ins (1 :: st) else exec ins (0 :: st)
+        if x = y then exec ins (1 :: st) else exec ins (0 :: st)          //0, 2, 1
       | (ILT       :: ins,  y :: x :: st) ->
         if x < y then exec ins (1 :: st) else exec ins (0 :: st)
       | (IPOP      :: ins,  _ :: st)      -> exec ins st
       | (ISWAP     :: ins,  y :: x :: st) -> exec ins (x :: y :: st)
       | (IJMP l    :: _,    st)           -> exec (find l prog) st
-      | (IJMPIF l  :: _,    1 :: st)      -> exec (find l prog) st
-      | (IJMPIF l  :: ins,  _ :: st)      -> exec ins st
+      | (IJMPIF l  :: _,    1 :: st)      -> exec (find l prog) st      
+      | (IJMPIF l  :: ins,  _ :: st)      -> exec ins st               //2, 1
       | (ILAB  l   :: ins,  st)           -> exec ins st
   exec prog st
 
