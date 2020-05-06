@@ -1,25 +1,29 @@
-module Final2
+(* module Final2
 
 open Parser
-open VM
+open VM *)
 
-(* type varname  = string
+type varname  = string
 type funcname = string
 type exp      = | INT     of int                    // i
                 | ADD     of exp * exp            // e1 + e2
                 | VAR     of varname     
                 | SUB     of exp * exp    
                 | DIV     of exp * exp  
-               // | MUL     of exp * exp 
-                | EQ     of exp * exp 
-                | LT     of exp * exp 
+                | MUL     of exp * exp 
+                | EQ      of exp * exp 
+                | LT      of exp * exp 
                 | AND     of exp * exp
-                | OR    of exp * exp
-              //  | MUL     of exp * exp
-                | MUL     of exp * exp      // x
+                | OR      of exp * exp
+                | NEQ     of exp * exp
+                | LE      of exp * exp  
+                | GT      of exp * exp 
+                | GE      of exp * exp 
+                | IF      of exp * exp * exp
+                | LET     of varname * exp * exp                 
                 | CALL    of funcname * exp list                   
 
-type func     = funcname * (varname list * exp)  *)    // func f ( x ) = e
+type func     = funcname * (varname list * exp)      // func f ( x ) = e
 
 //let s = parseProgFromString "1+2"
 
