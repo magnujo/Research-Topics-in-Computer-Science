@@ -1,0 +1,6 @@
+
+#r "parser.dll";; 
+#r "vm.dll";;
+#load "final2.fs";;
+open Final2;;
+let s = Parser.parseProgFromString;;
