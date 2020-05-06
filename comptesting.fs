@@ -1,7 +1,7 @@
-(* module Final2
+// module Final2
 
-open Parser
-open VM *)
+//open Parser
+//open VM 
 
 type varname  = string
 type funcname = string
@@ -80,32 +80,52 @@ type inst  = | IHALT
              | ISWAP
              | IGET    of int
              | IADD
+             | ISUB
+             | IMUL
+             | IDIV             
+             | IEQ
+             | ILT
+             | ILE
+             | IJMP    of label
+             | IJMPIF  of label
              | ICALL   of label
              | ILAB    of label
              | IRETN
-
+    
+// Virtual machine
 
 let private get = List.item
-
 let rec private find l = function
+  | []               -> failwith "error execuing code"
   | (ILAB l' :: ins) -> if l = l' then ins else find l ins
   | (_       :: ins) -> find l ins
-
- //[IPUSH 10; IPUSH 42; IPUSH 11; ICALL 6; ILAB 7; ISWAP; IPOP; ISWAP; IPOP; IHALT; ILAB 6; IGET 1; IGET 3; IADD; IGET 4; IADD; ISWAP; IRETN]
-
+  
 let execProg prog st =
   let rec exec ins st =
     match (ins, st) with
       | ([],                v :: _)       -> v
-      | (IHALT     :: _,    v :: _)       -> v                             //63, 10
-      | (IPUSH i   :: ins,  st)           -> exec ins (i :: st)             //11, 42, 10    
-      | (IGET p    :: ins,  st)           -> exec ins (get p st :: st)      //10, 53, 7, 11, 42, 10   //42, 11, 7, 11, 42, 10   //11, 7, 11, 42, 10   
-      | (IADD      :: ins,  y :: x :: st) -> exec ins (x + y :: st)         //63, 7, 11, 42, 10 //53, 7, 11, 42, 10 
-      | (IPOP      :: ins,  _ :: st)      -> exec ins st                    
-      | (ISWAP     :: ins,  y :: x :: st) -> exec ins (x :: y :: st)        //7, 63, 11, 42, 10   
-      | (ICALL p   :: ILAB l :: _, st)    -> exec (find p prog) (l :: st)   //7, 11, 42, 10
+      | (IHALT     :: _,    v :: _)       -> v
+      | (IPUSH i   :: ins,  st)           -> exec ins (i :: st)
+      | (IGET p    :: ins,  st)           -> exec ins (get p st :: st)
+      | (IADD      :: ins,  y :: x :: st) -> exec ins (x + y :: st)
+      | (ISUB      :: ins,  y :: x :: st) -> exec ins (x - y :: st)
+      | (IMUL      :: ins,  y :: x :: st) -> exec ins (x * y :: st)
+      | (IDIV      :: ins,  y :: x :: st) -> exec ins (x / y :: st)
+      | (IEQ       :: ins,  y :: x :: st) ->
+        if x = y then exec ins (1 :: st) else exec ins (0 :: st)
+      | (ILT       :: ins,  y :: x :: st) ->
+        if x < y then exec ins (1 :: st) else exec ins (0 :: st)
+      | (ILE       :: ins,  y :: x :: st) ->
+        if x <= y then exec ins (1 :: st) else exec ins (0 :: st)
+      | (IPOP      :: ins,  _ :: st)      -> exec ins st
+      | (ISWAP     :: ins,  y :: x :: st) -> exec ins (x :: y :: st)
+      | (IJMP l    :: _,    st)           -> exec (find l prog) st
+      | (IJMPIF l  :: _,    1 :: st)      -> exec (find l prog) st
+      | (IJMPIF l  :: ins,  _ :: st)      -> exec ins st
+      | (ICALL p   :: ILAB l :: _, st)    -> exec (find p prog) (l :: st)
       | (ILAB  l   :: ins,  st)           -> exec ins st
-      | (IRETN     :: _,    l :: st)      -> exec (find l prog) st          //63, 11, 42, 10   
+      | (IRETN     :: _,    l :: st)      -> exec (find l prog) st
+      | _                                 -> failwith "error executing code"
   exec prog st
 
 
@@ -127,6 +147,12 @@ let rec comp fenv env = function                       // compiles function arg 
                            comp fenv ("" :: env) e2 @  // comp fenv ""::""::"x"::[] VAR "Y" ->
                            [IADD]                      // [IGET1, IPUSH 42, IADD]
   | VAR x               -> [IGET (varpos x env)]
+  | EQ (e1, e2)         -> comp fenv env         e1 @
+                           comp fenv ("" :: env) e2 @
+                           [IEQ]
+  | LT (e1, e2)         -> comp env         e1 @
+                           comp ("" :: env) e2 @
+                           [ILT]                         
   | CALL (f, [a1])      -> let lr = newLabel()         // lr = 1 
                            let lf = lookup f fenv      // lf = 0
                            comp fenv env a1  @         // comp fenv [] INT 8 -> [IPUSH 8]
@@ -186,6 +212,8 @@ let compProg (funcs, e1) = // compiles functions
   compFuncs funcs                                          
 
 
+let eq = compProg ([], EQ(INT 1, INT 2))
+
 //let exL2 = compProg ([("foo", (["x"; "y"; "z"], ADD (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 10; INT 42; INT 11]))  
 
 //let exL1 = compProg ([("foo", (["x"], ADD (VAR "x", INT 42)))], CALL("foo", [INT 8]))          //<- works
@@ -194,4 +222,4 @@ let compProg (funcs, e1) = // compiles functions
          
 
  
-//execProg exL2 []
+execProg eq []
