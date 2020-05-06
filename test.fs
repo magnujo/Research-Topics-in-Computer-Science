@@ -20,7 +20,6 @@ let evalProg (funcs, e) =
         | SUB (e1, e2)    -> eval env e1 - eval env e2
         | DIV (e1, e2)    -> eval env e1 / eval env e2
         | MUL (e1, e2)    -> eval env e1 * eval env e2
-        | OR (e1, e2)     -> if eval env e1 = 1 then 1 else if  eval env e2 = 1 then 1 else 0
         | EQ (e1, e2)     -> if eval env e1 = eval env e2 then 1 else 0
         | NEQ (e1, e2)    -> if eval env e1 <> eval env e2 then 1 else 0
         | LT (e1, e2)     -> if eval env e1 < eval env e2 then 1 else 0
@@ -28,6 +27,8 @@ let evalProg (funcs, e) =
         | GT (e1, e2)     -> if eval env e1 > eval env e2 then 1 else 0
         | GE (e1, e2)     -> if eval env e1 >= eval env e2 then 1 else 0
         | IF (e1,e2,e3)   -> if eval env e1 = 1 then eval env e2 else eval env e3
+        | OR (e1, e2)     -> if eval env e1 = 1 then 1 else if  eval env e2 = 1 then 1 else 0
+        |
         | LET (x, e1, e2) -> let v1 = eval env e1
                              eval ((x, v1) :: env) e2
         | VAR x           -> lookup x env
