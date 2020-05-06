@@ -52,8 +52,8 @@ let evalProg (funcs, e) =
     | CALL (f, [e1])     -> let v = eval env e1                              // evaluates the input to the function, which can be a sequence of exps (fx ADD(INT, INT)) 
                             let ([x], body) = lookup f funcs                // look for the function in the function env. Fx lookup "foo" in [("foo", ("x", ADD (VAR "x", INT 42)))] and add the variable name "x" to x and ADD (VAR "x", INT 42) to body
                             eval [(x, v)] body     
-    | CALL (f, [e1; e2]) -> let v1 = eval env e1  
-                            let v2 = eval env e2 
+    | CALL (f, [e1; e2]) -> let v1 = eval env e1  //6
+                            let v2 = eval env e2  //5
                             let ([x; k], body) = lookup f funcs
                             eval [(x, v1); (k, v2)] body                       
   eval [] e                                              

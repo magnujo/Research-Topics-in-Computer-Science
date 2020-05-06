@@ -25,9 +25,17 @@ let evalProg (funcs, e) =
     | CALL (f, [e1; e2]) -> let v1 = eval env e1  
                             let v2 = eval env e2 
                             let ([x; k], body) = lookup f funcs
-                            eval [(x, v1); (k, v2)] body                       
+                            eval [(x, v1); (k, v2)] body       
+    | CALL (f, es)       -> let rec bind xs es =
+                                match (xs, es) with
+                                  |([], []) -> []
+                                  |(x :: xs, e :: es) -> let v = eval env e 
+                                                         (x, v) :: bind xs es
+                            let (xs, body) = lookup f funcs
+                            eval (bind xs es) body                                         
   eval [] e                                              
 
+//evalProg ([("foo", (["x"; "y"; "z"], ADD (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
 
 type label = int
 type inst  = | IHALT
@@ -48,21 +56,21 @@ let rec private find l = function
   | (ILAB l' :: ins) -> if l = l' then ins else find l ins
   | (_       :: ins) -> find l ins
 
-
+ //[IPUSH 10; IPUSH 42; IPUSH 11; ICALL 6; ILAB 7; ISWAP; IPOP; ISWAP; IPOP; IHALT; ILAB 6; IGET 1; IGET 3; IADD; IGET 4; IADD; ISWAP; IRETN]
 
 let execProg prog st =
   let rec exec ins st =
     match (ins, st) with
       | ([],                v :: _)       -> v
-      | (IHALT     :: _,    v :: _)       -> v                             
-      | (IPUSH i   :: ins,  st)           -> exec ins (i :: st)          
-      | (IGET p    :: ins,  st)           -> exec ins (get p st :: st)       
-      | (IADD      :: ins,  y :: x :: st) -> exec ins (x + y :: st)        
+      | (IHALT     :: _,    v :: _)       -> v                             //63, 10
+      | (IPUSH i   :: ins,  st)           -> exec ins (i :: st)             //11, 42, 10    
+      | (IGET p    :: ins,  st)           -> exec ins (get p st :: st)      //10, 53, 7, 11, 42, 10   //42, 11, 7, 11, 42, 10   //11, 7, 11, 42, 10   
+      | (IADD      :: ins,  y :: x :: st) -> exec ins (x + y :: st)         //63, 7, 11, 42, 10 //53, 7, 11, 42, 10 
       | (IPOP      :: ins,  _ :: st)      -> exec ins st                    
-      | (ISWAP     :: ins,  y :: x :: st) -> exec ins (x :: y :: st)        
-      | (ICALL p   :: ILAB l :: _, st)    -> exec (find p prog) (l :: st)   
+      | (ISWAP     :: ins,  y :: x :: st) -> exec ins (x :: y :: st)        //7, 63, 11, 42, 10   
+      | (ICALL p   :: ILAB l :: _, st)    -> exec (find p prog) (l :: st)   //7, 11, 42, 10
       | (ILAB  l   :: ins,  st)           -> exec ins st
-      | (IRETN     :: _,    l :: st)      -> exec (find l prog) st          
+      | (IRETN     :: _,    l :: st)      -> exec (find l prog) st          //63, 11, 42, 10   
   exec prog st
 
 
@@ -101,19 +109,20 @@ let rec comp fenv env = function                       // compiles function arg 
                            [IPOP]           @
                            [ISWAP]          @             
                            [IPOP]                   //[IPUSH 8; IPUSH 42; ICALL 0; ILAB 1; I]   
-  | CALL (f, es)        -> let rec bind es =
+  | CALL (f, es)        -> //let sps = [ISWAP] @ [IPOP]
+                           let rec bind es =
                              match es with
                                | []       -> []
-                               | e::es    -> comp fenv env e @ bind es                
-                           let lr = newLabel()                      // lr = 1 
-                           let lf = lookup f fenv      // lf = 0
-                           bind es          @          //[IPUSH 8]           //[IPUSH 8; IPUSH 42]
-                           [ICALL lf]       @          //[ICALL 0]  
-                           [ILAB lr]        @          //[ILAB 1]                        
+                               | e::es    -> comp fenv env e @ bind es                                                               
+                           let lr = newLabel()                      
+                           let lf = lookup f fenv
+                           bind es          @                                         
+                           [ICALL lf]       @           
+                           [ILAB lr]        @                                             
                            [ISWAP]          @          
-                           [IPOP]           @
+                           [IPOP]           @   //needs as many swaps and pops as there elements in es
                            [ISWAP]          @             
-                           [IPOP]                   //[IPUSH 8; IPUSH 42; ICALL 0; ILAB 1; I]   
+                           [IPOP]                
   
 
 let compProg (funcs, e1) = // compiles functions
@@ -134,11 +143,11 @@ let compProg (funcs, e1) = // compiles functions
                                       [ISWAP]                  @    
                                       [IRETN]                       //[IGET 1; IGET 3; IADD; ISWAP; IRETN]
     | (f, (x::xs, e)) :: funcs     -> let lf = lookup f fenv   
-                                      compFuncs funcs          @    //[IPUSH 8; IPUSH 42; ICALL 0; ILAB 1; I SWAP; IPOP; IHALT;
-                                      [ILAB lf]                @    //[ILAB 0]
-                                      comp fenv (""::x::xs) e  @    //
+                                      compFuncs funcs          @    
+                                      [ILAB lf]                @    
+                                      comp fenv (""::x::xs) e  @    
                                       [ISWAP]                  @    
-                                      [IRETN]                       //[IGET 1; IGET 3; IADD; ISWAP; IRETN]
+                                      [IRETN]                       
   compFuncs funcs                                          
 
 
