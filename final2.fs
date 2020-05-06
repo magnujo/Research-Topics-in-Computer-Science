@@ -1,5 +1,3 @@
-module Final2
-
 type varname  = string
 type funcname = string
 type exp      = | INT     of int                    // i
@@ -7,7 +5,13 @@ type exp      = | INT     of int                    // i
                 | VAR     of varname     
                 | SUB     of exp * exp    
                 | DIV     of exp * exp  
-                | MUL     of exp * exp         // x
+               // | MUL     of exp * exp 
+                | EQ     of exp * exp 
+                | LT     of exp * exp 
+                | AND     of exp * exp
+               // | MUL     of exp * exp
+              //  | MUL     of exp * exp
+                | MUL     of exp * exp      // x
                 | CALL    of funcname * exp list    // f ( e )                
 type func     = funcname * (varname list * exp)     // func f ( x ) = e
 
@@ -25,17 +29,17 @@ let evalProg (funcs, e) =
     | DIV (e1, e2)       -> eval env e1 / eval env e2
     | MUL (e1, e2)       -> eval env e1 * eval env e2
     | VAR x              -> lookup x env
-    | LET (x, e1, e2)    -> let v1 = eval env e1
-                            eval ((x, v1) :: env) e2
+    (* | LET (x, e1, e2)    -> let v1 = eval env e1
+                            eval ((x, v1) :: env) e2 *)
     | EQ (e1, e2)        -> if eval env e1 =  eval env e2 then 1 else 0
-    | NEQ (e1, e2)       -> if eval env e1 <> eval env e2 then 1 else 0
+    //| NEQ (e1, e2)       -> if eval env e1 <> eval env e2 then 1 else 0
     | LT (e1, e2)        -> if eval env e1 <  eval env e2 then 1 else 0
-    | LE (e1, e2)        -> if eval env e1 <= eval env e2 then 1 else 0
-    | GT (e1, e2)        -> if eval env e1 >  eval env e2 then 1 else 0
-    | GE (e1, e2)        -> if eval env e1 >= eval env e2 then 1 else 0
-    | IF (e1, e2, e3)    -> if eval env e1 = 1 then eval env e2 else eval env e3                    //tjek op
-    | OR (e1, e2)        -> if eval env e1 = 1 then 1 else if  eval env e2 = 1 then 1 else 0        //tjek op
-    | AND (e1, e2) -> if eval env e1 = 1 && eval env e2 = 1 then 1 else 0                           //tjek op
+   // | LE (e1, e2)        -> if eval env e1 <= eval env e2 then 1 else 0
+   // | GT (e1, e2)        -> if eval env e1 >  eval env e2 then 1 else 0
+  //  | GE (e1, e2)        -> if eval env e1 >= eval env e2 then 1 else 0
+   // | IF (e1, e2, e3)    -> if eval env e1 = 1 then eval env e2 else eval env e3                    //tjek op 
+   // | OR (e1, e2)        -> if eval env e1 = 1 then 1 else if eval env e2 = 1 then 1 else 0        //tjek op
+    | AND (e1, e2)       -> if eval env e1 = 1 then (if eval env e2 = 1 then 1 else 0) else 0                            //tjek op  if e1 then e2 else 0
     | CALL (f, [e1])     -> let v = eval env e1                              // evaluates the input to the function, which can be a sequence of exps (fx ADD(INT, INT)) 
                             let ([x], body) = lookup f funcs                // look for the function in the function env. Fx lookup "foo" in [("foo", ("x", ADD (VAR "x", INT 42)))] and add the variable name "x" to x and ADD (VAR "x", INT 42) to body
                             eval [(x, v)] body     
@@ -51,8 +55,8 @@ let evalProg (funcs, e) =
                             let (xs, body) = lookup f funcs
                             eval (bind xs es) body                                         
   eval [] e                                              
-
-evalProg ([("foo", (["x"; "y"; "z"], ADD (MUL(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
+evalProg([], AND(EQ(INT 1, INT1), EQ(INT 2, INT 2))
+//evalProg ([("foo", (["x"; "y"; "z"], ADD (MUL(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
 
 type label = int
 type inst  = | IHALT
