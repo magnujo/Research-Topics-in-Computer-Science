@@ -1,4 +1,4 @@
-module Finalfinal
+module Magnusj
 
 //open Parser
 //open VM 
