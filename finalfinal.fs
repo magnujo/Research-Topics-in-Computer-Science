@@ -1,8 +1,7 @@
-module Finaltest
+module Finalfinal
 
 //open Parser
 //open VM 
-
 
 type 'a env = (varname * 'a) list
 let rec lookup x = function
@@ -47,12 +46,10 @@ let rec varpos x = function
   | []       -> failwith ("unbound: " + x)
   | y :: env -> if x = y then 0 else 1 + varpos x env
 
-
-
-let rec comp fenv env = function                       // compiles function arg and function calc
+let rec comp fenv env = function
   | INT i               -> [IPUSH i]
-  | ADD (e1, e2)        -> comp fenv env         e1 @  // comp fenv ["", "x"] VAR "X" ->  IGET 1
-                           comp fenv ("" :: env) e2 @  // comp fenv ""::""::"x"::[] VAR "Y" ->
+  | ADD (e1, e2)        -> comp fenv env         e1 @ 
+                           comp fenv ("" :: env) e2 @  
                            [IADD]  
   | NEG e               -> [IPUSH 0]                @
                            comp fenv ("":: env) e   @
@@ -89,14 +86,14 @@ let rec comp fenv env = function                       // compiles function arg 
                            [ILE]                                                              
   | AND (e1, e2)        -> let l2 = newLabel()          //kan også laves som MUL
                            let le = newLabel()
-                           comp fenv env e1  @        //resulterer i 1 eller 0 på toppen af stack
-                           [IJMPIF l2]  @             // hvis top element = 1 så hopper den. fjerner top af stack.
+                           comp fenv env e1  @        
+                           [IJMPIF l2]  @            
                            [IPUSH 0] @
                            [IJMP le]    @
                            [ILAB l2]    @
                            comp fenv ("" :: env) e2  @
                            [ILAB le]  
-  | OR (e1, e2)         -> let l2 = newLabel()          //kan også laves som MUL
+  | OR (e1, e2)         -> let l2 = newLabel()          
                            let le = newLabel()
                            comp fenv env e1  @
                            [IJMPIF l2]  @
@@ -122,17 +119,17 @@ let rec comp fenv env = function                       // compiles function arg 
                            let rec bind (es, spl) lr lf =
                              match (es, spl) with
                                | ([], spl)       -> [] @ [ICALL lf] @ [ILAB lr] @ spl
-                               | (e::es, spl)    -> comp fenv env e @ bind (es, [ISWAP]@[IPOP]@spl) lr lf                                                                                   
+                               | (e::es, spl)    -> comp fenv env e @ bind (es, [ISWAP] @ [IPOP] @ spl) lr lf                                                                                   
                            let lr = newLabel()                      
                            let lf = lookup f fenv
                            bind (es, []) lr lf                 
   
 
-let compProg (funcs, e1) = // compiles functions
+let compProg (funcs, e1) = 
   let fenv = List.map (fun (f, _) -> (f, newLabel())) funcs
   let rec compFuncs = function
-    | []                           -> comp fenv [] e1 @             // compiles the argument that is passed into the function, which also calls the function body with ICALL 
-                                      [IHALT]                       // [IPUSH 8, ICALL 0, ILAB 1, ISWAP, IPOP, IHALT] <- list with argument on top of list. swap and pops to remove the return call?                  
+    | []                           -> comp fenv [] e1 @            
+                                      [IHALT]                       
     | (f, (x::xs, e)) :: funcs     -> let lf = lookup f fenv   
                                       compFuncs funcs          @    
                                       [ILAB lf]                @    
