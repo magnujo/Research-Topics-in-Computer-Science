@@ -36,15 +36,15 @@ let evalProg (funcs, e) =
     | DIV (e1, e2)       -> eval env e1 / eval env e2
     | MUL (e1, e2)       -> eval env e1 * eval env e2
     | VAR x              -> lookup x env
-    (* | LET (x, e1, e2)    -> let v1 = eval env e1
-                            eval ((x, v1) :: env) e2 *)
+    | LET (x, e1, e2)    -> let v1 = eval env e1
+                            eval ((x, v1) :: env) e2 
     | EQ (e1, e2)        -> if eval env e1 =  eval env e2 then 1 else 0
-    //| NEQ (e1, e2)       -> if eval env e1 <> eval env e2 then 1 else 0
+    | NEQ (e1, e2)       -> if eval env e1 <> eval env e2 then 1 else 0
     | LT (e1, e2)        -> if eval env e1 <  eval env e2 then 1 else 0
-   // | LE (e1, e2)        -> if eval env e1 <= eval env e2 then 1 else 0
-   // | GT (e1, e2)        -> if eval env e1 >  eval env e2 then 1 else 0
-   //  | GE (e1, e2)        -> if eval env e1 >= eval env e2 then 1 else 0
-   // | IF (e1, e2, e3)    -> if eval env e1 = 1 then eval env e2 else eval env e3                    //tjek op 
+    | LE (e1, e2)        -> if eval env e1 <= eval env e2 then 1 else 0
+    | GT (e1, e2)        -> if eval env e1 >  eval env e2 then 1 else 0
+    | GE (e1, e2)        -> if eval env e1 >= eval env e2 then 1 else 0
+    | IF (e1, e2, e3)    -> if eval env e1 = 1 then eval env e2 else eval env e3                    //tjek op 
     | OR (e1, e2)        -> if eval env e1 = 1 then 1 else eval env e2                      //tjek op
     | AND (e1, e2)       -> if eval env e1 = 1 then (if eval env e2 = 1 then 1 else 0) else 0                            //tjek op  if e1 then e2 else 0
     | CALL (f, [e1])     -> let v = eval env e1                              // evaluates the input to the function, which can be a sequence of exps (fx ADD(INT, INT)) 
