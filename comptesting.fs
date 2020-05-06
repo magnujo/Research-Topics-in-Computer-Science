@@ -5,24 +5,25 @@
 
 type varname  = string
 type funcname = string
-type exp      = | INT     of int                    // i
+type exp      = | INT     of int                  // i
                 | ADD     of exp * exp            // e1 + e2
-                | VAR     of varname     
-                | SUB     of exp * exp    
-                | DIV     of exp * exp  
-                | MUL     of exp * exp 
-                | EQ      of exp * exp 
-                | LT      of exp * exp 
-                | AND     of exp * exp
-                | OR      of exp * exp
-                | NEQ     of exp * exp
-                | LE      of exp * exp  
-                | GT      of exp * exp 
-                | GE      of exp * exp 
-                | IF      of exp * exp * exp
-                | LET     of varname * exp * exp                 
-                | CALL    of funcname * exp list                   
-
+                | SUB     of exp * exp            // e1 - e2
+                | NEG     of exp                  // - e
+                | MUL     of exp * exp            // e1 * e2
+                | DIV     of exp * exp            // e1 / e2
+                | EQ      of exp * exp            // e1 == e2
+                | NEQ     of exp * exp            // e1 != e2
+                | LT      of exp * exp            // e1 < e2
+                | LE      of exp * exp            // e1 <= e2
+                | GT      of exp * exp            // e1 > e2
+                | GE      of exp * exp            // e1 >= e2
+                | VAR     of varname              // x
+                | LET     of varname * exp * exp  // let x = e1 in e2
+                | IF      of exp * exp * exp      // if e1 then e2 else e3
+                | AND     of exp * exp            // e1 && e1
+                | OR      of exp * exp            // e1 || e1                
+                | CALL    of funcname * exp list  // f ( e1, ..., en )
+                                 
 type func     = funcname * (varname list * exp)      // func f ( x ) = e
 
 //let s = parseProgFromString "1+2"
@@ -145,14 +146,56 @@ let rec comp fenv env = function                       // compiles function arg 
   | INT i               -> [IPUSH i]
   | ADD (e1, e2)        -> comp fenv env         e1 @  // comp fenv ["", "x"] VAR "X" ->  IGET 1
                            comp fenv ("" :: env) e2 @  // comp fenv ""::""::"x"::[] VAR "Y" ->
-                           [IADD]                      // [IGET1, IPUSH 42, IADD]
+                           [IADD]  
+  | NEG e               -> [IPUSH 0]                @
+                           comp fenv ("":: env) e   @
+                           [ISUB]                
+  | SUB (e1, e2)        -> comp fenv env         e1 @
+                           comp fenv ("" :: env) e2 @
+                           [ISUB]      
+  | MUL (e1, e2)        -> comp fenv env         e1 @
+                           comp fenv ("" :: env) e2 @
+                           [IMUL]   
+  | DIV (e1, e2)        -> comp fenv env         e1 @
+                           comp fenv ("" :: env) e2 @
+                           [IDIV]   
+  | GT (e1, e2)         -> comp fenv env         e2 @
+                           comp fenv ("" :: env) e1 @
+                           [ILT]                                                                                         
   | VAR x               -> [IGET (varpos x env)]
   | EQ (e1, e2)         -> comp fenv env         e1 @
                            comp fenv ("" :: env) e2 @
                            [IEQ]
-  | LT (e1, e2)         -> comp env         e1 @
-                           comp ("" :: env) e2 @
-                           [ILT]                         
+  | NEQ (e1, e2)        -> [IPUSH 1] @
+                           comp fenv env         e1 @
+                           comp fenv ("" :: env) e2 @
+                           [IEQ] @      
+                           [ISUB]                  
+  | LT (e1, e2)         -> comp fenv env         e1 @
+                           comp fenv ("" :: env) e2 @
+                           [ILT] 
+  | LE (e1, e2)         -> comp fenv env         e1 @
+                           comp fenv ("" :: env) e2 @
+                           [ILE]           
+  | GE (e1, e2)         -> comp fenv env         e2 @
+                           comp fenv ("" :: env) e1 @
+                           [ILE]                                                              
+  | AND (e1, e2)        -> comp fenv env         e1 @
+                           comp fenv ("" :: env) e2 @
+                           [ILT]                              
+  | LET (x, e1, e2)     -> comp fenv env        e1 @
+                           comp fenv (x :: env) e2 @
+                           [ISWAP]            @
+                           [IPOP]        
+  | IF (e1, e2, e3)     -> let l2 = newLabel()
+                           let le = newLabel()
+                           comp fenv env e1  @
+                           [IJMPIF l2]  @
+                           comp fenv env e3 @
+                           [IJMP le]    @
+                           [ILAB l2]    @
+                           comp fenv env e2  @
+                           [ILAB le]                                      
   | CALL (f, [a1])      -> let lr = newLabel()         // lr = 1 
                            let lf = lookup f fenv      // lf = 0
                            comp fenv env a1  @         // comp fenv [] INT 8 -> [IPUSH 8]
@@ -212,7 +255,7 @@ let compProg (funcs, e1) = // compiles functions
   compFuncs funcs                                          
 
 
-let eq = compProg ([], EQ(INT 1, INT 2))
+let eq = compProg ([], MUL(INT 1, INT 2))
 
 //let exL2 = compProg ([("foo", (["x"; "y"; "z"], ADD (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 10; INT 42; INT 11]))  
 

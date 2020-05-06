@@ -110,4 +110,6 @@ let rec comp env = function
                        comp env e2  @
                        [ILAB le]
 
-comp ["x"; "y" "z"] (ADD(INT 1, VAR "x"))
+let s = comp [] (IF (EQ(INT 1, INT 2), INT 3, INT 4))
+
+execProg s []
