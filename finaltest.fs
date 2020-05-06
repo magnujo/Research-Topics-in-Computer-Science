@@ -94,9 +94,24 @@ let rec comp fenv env = function                       // compiles function arg 
   | GE (e1, e2)         -> comp fenv env         e2 @
                            comp fenv ("" :: env) e1 @
                            [ILE]                                                              
-  | AND (e1, e2)        -> comp fenv env         e1 @
-                           comp fenv ("" :: env) e2 @
-                           [ILT]                              
+  | AND (e1, e2)        -> let l2 = newLabel()          //kan også laves som MUL
+                           let le = newLabel()
+                           comp fenv env e1  @        //resulterer i 1 eller 0 på toppen af stack
+                           [IJMPIF l2]  @             // hvis top element = 1 så hopper den. fjerner top af stack.
+                           [IPUSH 0] @
+                           [IJMP le]    @
+                           [ILAB l2]    @
+                           comp fenv ("" :: env) e2  @
+                           [ILAB le]  
+  | OR (e1, e2)         -> let l2 = newLabel()          //kan også laves som MUL
+                           let le = newLabel()
+                           comp fenv env e1  @
+                           [IJMPIF l2]  @
+                           comp fenv ("" :: env) e2  @
+                           [IJMP le]    @
+                           [ILAB l2]    @
+                           [IPUSH 1]    @
+                           [ILAB le]                               
   | LET (x, e1, e2)     -> comp fenv env        e1 @
                            comp fenv (x :: env) e2 @
                            [ISWAP]            @

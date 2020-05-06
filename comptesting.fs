@@ -180,15 +180,24 @@ let rec comp fenv env = function                       // compiles function arg 
   | GE (e1, e2)         -> comp fenv env         e2 @
                            comp fenv ("" :: env) e1 @
                            [ILE]                                                              
-  | AND (e1, e2)        -> let l2 = newLabel()
+  | AND (e1, e2)        -> let l2 = newLabel()          //kan også laves som MUL
+                           let le = newLabel()
+                           comp fenv env e1  @        //resulterer i 1 eller 0 på toppen af stack
+                           [IJMPIF l2]  @             // hvis top element = 1 så hopper den. fjerner top af stack.
+                           [IPUSH 0] @
+                           [IJMP le]    @
+                           [ILAB l2]    @
+                           comp fenv ("":: env) e2  @
+                           [ILAB le]  
+  | OR (e1, e2)         -> let l2 = newLabel()          //kan også laves som MUL
                            let le = newLabel()
                            comp fenv env e1  @
                            [IJMPIF l2]  @
-                           comp fenv env e3 @
+                           comp fenv ("" :: env) e2  @
                            [IJMP le]    @
                            [ILAB l2]    @
-                           comp fenv env e2  @
-                           [ILAB le]                                  
+                           [IPUSH 1]    @
+                           [ILAB le]                                                           
   | LET (x, e1, e2)     -> comp fenv env        e1 @
                            comp fenv (x :: env) e2 @
                            [ISWAP]            @
@@ -261,7 +270,9 @@ let compProg (funcs, e1) = // compiles functions
   compFuncs funcs                                          
 
 
-let div = compProg ([], NEG(INT 15))
+
+let anda = compProg ([], IF(OR(EQ(INT 2, INT 2), EQ(INT 3, INT 4)), INT 4, INT 6))
+//let neg = compProg ([], NEG(INT 15))
 
 //let eq = compProg ([], IF(EQ(INT 1, INT 2), INT 4, INT 2))
 
@@ -273,4 +284,4 @@ let div = compProg ([], NEG(INT 15))
          
 
  
-execProg div []
+execProg anda []

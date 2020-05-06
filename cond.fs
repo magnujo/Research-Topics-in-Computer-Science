@@ -104,12 +104,12 @@ let rec comp env = function
                        [IPOP]
   | IF (e1, e2, e3) -> let l2 = newLabel()
                        let le = newLabel()
-                       comp env e1  @
-                       [IJMPIF l2]  @
-                       comp  env e3 @
-                       [IJMP le]    @
-                       [ILAB l2]    @
-                       comp env e2  @
+                       comp env e1  @  // compiles the first exp. If the exp is true 1 will be on top of stack, and 0 otherwise
+                       [IJMPIF l2]  @  // checks if there is a 0 or 1 on top and jumps to l2 if its a 1
+                       comp  env e3 @  // this happens only if e1 i false
+                       [IJMP le]    @  // jumps to ILAB le only if e1 is false
+                       [ILAB l2]    @  
+                       comp env e2  @  // this happens if e1 is true
                        [ILAB le]
 
 let s = comp [] (IF (EQ(INT 1, INT 2), INT 3, INT 4))
