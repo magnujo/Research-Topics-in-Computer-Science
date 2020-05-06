@@ -1,4 +1,9 @@
-type varname  = string
+module Final2
+
+open Parser
+open VM
+
+(* type varname  = string
 type funcname = string
 type exp      = | INT     of int                    // i
                 | ADD     of exp * exp            // e1 + e2
@@ -12,9 +17,11 @@ type exp      = | INT     of int                    // i
                 | OR    of exp * exp
               //  | MUL     of exp * exp
                 | MUL     of exp * exp      // x
-                | CALL    of funcname * exp list    // f ( e )                
-type func     = funcname * (varname list * exp)     // func f ( x ) = e
+                | CALL    of funcname * exp list                   
 
+type func     = funcname * (varname list * exp)  *)    // func f ( x ) = e
+
+//let s = parseProgFromString "1+2"
 
 type 'a env = (varname * 'a) list
 let rec lookup x = function
@@ -36,7 +43,7 @@ let evalProg (funcs, e) =
     | LT (e1, e2)        -> if eval env e1 <  eval env e2 then 1 else 0
    // | LE (e1, e2)        -> if eval env e1 <= eval env e2 then 1 else 0
    // | GT (e1, e2)        -> if eval env e1 >  eval env e2 then 1 else 0
-  //  | GE (e1, e2)        -> if eval env e1 >= eval env e2 then 1 else 0
+   //  | GE (e1, e2)        -> if eval env e1 >= eval env e2 then 1 else 0
    // | IF (e1, e2, e3)    -> if eval env e1 = 1 then eval env e2 else eval env e3                    //tjek op 
     | OR (e1, e2)        -> if eval env e1 = 1 then 1 else eval env e2                      //tjek op
     | AND (e1, e2)       -> if eval env e1 = 1 then (if eval env e2 = 1 then 1 else 0) else 0                            //tjek op  if e1 then e2 else 0
@@ -53,11 +60,11 @@ let evalProg (funcs, e) =
                                   |(x :: xs, e :: es) -> let v = eval env e 
                                                          (x, v) :: bind xs es
                             let (xs, body) = lookup f funcs
-                            eval (bind xs es) body                                         
+                            eval (bind xs es) body                                          
   eval [] e                                              
-
-
-evalProg([], OR(EQ(INT 2, INT 1), EQ(INT 20, INT 20)))
+//evalProg s
+//let run s = evalProg (parseProgFromString s)
+//evalProg([], OR(EQ(INT 2, INT 1), EQ(INT 20, INT 20)))
 
 
 //evalProg ([("foo", (["x"; "y"; "z"], ADD (MUL(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
@@ -72,7 +79,6 @@ type inst  = | IHALT
              | ICALL   of label
              | ILAB    of label
              | IRETN
-
 
 
 let private get = List.item
@@ -176,7 +182,7 @@ let compProg (funcs, e1) = // compiles functions
   compFuncs funcs                                          
 
 
-let exL2 = compProg ([("foo", (["x"; "y"; "z"], ADD (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 10; INT 42; INT 11]))  
+//let exL2 = compProg ([("foo", (["x"; "y"; "z"], ADD (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 10; INT 42; INT 11]))  
 
 //let exL1 = compProg ([("foo", (["x"], ADD (VAR "x", INT 42)))], CALL("foo", [INT 8]))          //<- works
 
@@ -184,4 +190,4 @@ let exL2 = compProg ([("foo", (["x"; "y"; "z"], ADD (ADD(VAR "x", VAR "y"), VAR 
          
 
  
-execProg exL2 []
+//execProg exL2 []
