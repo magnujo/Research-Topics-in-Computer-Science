@@ -9,7 +9,7 @@ type exp      = | INT     of int                    // i
                 | EQ     of exp * exp 
                 | LT     of exp * exp 
                 | AND     of exp * exp
-               // | MUL     of exp * exp
+                | OR    of exp * exp
               //  | MUL     of exp * exp
                 | MUL     of exp * exp      // x
                 | CALL    of funcname * exp list    // f ( e )                
@@ -38,7 +38,7 @@ let evalProg (funcs, e) =
    // | GT (e1, e2)        -> if eval env e1 >  eval env e2 then 1 else 0
   //  | GE (e1, e2)        -> if eval env e1 >= eval env e2 then 1 else 0
    // | IF (e1, e2, e3)    -> if eval env e1 = 1 then eval env e2 else eval env e3                    //tjek op 
-   // | OR (e1, e2)        -> if eval env e1 = 1 then 1 else if eval env e2 = 1 then 1 else 0        //tjek op
+    | OR (e1, e2)        -> if eval env e1 = 1 then 1 else eval env e2                      //tjek op
     | AND (e1, e2)       -> if eval env e1 = 1 then (if eval env e2 = 1 then 1 else 0) else 0                            //tjek op  if e1 then e2 else 0
     | CALL (f, [e1])     -> let v = eval env e1                              // evaluates the input to the function, which can be a sequence of exps (fx ADD(INT, INT)) 
                             let ([x], body) = lookup f funcs                // look for the function in the function env. Fx lookup "foo" in [("foo", ("x", ADD (VAR "x", INT 42)))] and add the variable name "x" to x and ADD (VAR "x", INT 42) to body
@@ -55,7 +55,11 @@ let evalProg (funcs, e) =
                             let (xs, body) = lookup f funcs
                             eval (bind xs es) body                                         
   eval [] e                                              
-evalProg([], AND(EQ(INT 1, INT1), EQ(INT 2, INT 2))
+
+
+evalProg([], OR(EQ(INT 2, INT 1), EQ(INT 20, INT 20)))
+
+
 //evalProg ([("foo", (["x"; "y"; "z"], ADD (MUL(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
 
 type label = int
