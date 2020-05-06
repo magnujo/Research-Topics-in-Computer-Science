@@ -1,32 +1,8 @@
-// module Final2
+module Finaltest
 
 //open Parser
 //open VM 
 
-type varname  = string
-type funcname = string
-type exp      = | INT     of int                  // i
-                | ADD     of exp * exp            // e1 + e2
-                | SUB     of exp * exp            // e1 - e2
-                | NEG     of exp                  // - e
-                | MUL     of exp * exp            // e1 * e2
-                | DIV     of exp * exp            // e1 / e2
-                | EQ      of exp * exp            // e1 == e2
-                | NEQ     of exp * exp            // e1 != e2
-                | LT      of exp * exp            // e1 < e2
-                | LE      of exp * exp            // e1 <= e2
-                | GT      of exp * exp            // e1 > e2
-                | GE      of exp * exp            // e1 >= e2
-                | VAR     of varname              // x
-                | LET     of varname * exp * exp  // let x = e1 in e2
-                | IF      of exp * exp * exp      // if e1 then e2 else e3
-                | AND     of exp * exp            // e1 && e1
-                | OR      of exp * exp            // e1 || e1                
-                | CALL    of funcname * exp list  // f ( e1, ..., en )
-                                 
-type func     = funcname * (varname list * exp)      // func f ( x ) = e
-
-//let s = parseProgFromString "1+2"
 
 type 'a env = (varname * 'a) list
 let rec lookup x = function
@@ -67,68 +43,6 @@ let evalProg (funcs, e) =
                             let (xs, body) = lookup f funcs
                             eval (bind xs es) body                                          
   eval [] e                                              
-//evalProg s
-//let run s = evalProg (parseProgFromString s)
-//evalProg([], OR(EQ(INT 2, INT 1), EQ(INT 20, INT 20)))
-
-
-//evalProg ([("foo", (["x"; "y"; "z"], ADD (MUL(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
-
-type label = int
-type inst  = | IHALT
-             | IPUSH   of int
-             | IPOP
-             | ISWAP
-             | IGET    of int
-             | IADD
-             | ISUB
-             | IMUL
-             | IDIV             
-             | IEQ
-             | ILT
-             | ILE
-             | IJMP    of label
-             | IJMPIF  of label
-             | ICALL   of label
-             | ILAB    of label
-             | IRETN
-    
-// Virtual machine
-
-let private get = List.item
-let rec private find l = function
-  | []               -> failwith "error execuing code"
-  | (ILAB l' :: ins) -> if l = l' then ins else find l ins
-  | (_       :: ins) -> find l ins
-  
-let execProg prog st =
-  let rec exec ins st =
-    match (ins, st) with
-      | ([],                v :: _)       -> v
-      | (IHALT     :: _,    v :: _)       -> v
-      | (IPUSH i   :: ins,  st)           -> exec ins (i :: st)
-      | (IGET p    :: ins,  st)           -> exec ins (get p st :: st)
-      | (IADD      :: ins,  y :: x :: st) -> exec ins (x + y :: st)
-      | (ISUB      :: ins,  y :: x :: st) -> exec ins (x - y :: st)
-      | (IMUL      :: ins,  y :: x :: st) -> exec ins (x * y :: st)
-      | (IDIV      :: ins,  y :: x :: st) -> exec ins (x / y :: st)
-      | (IEQ       :: ins,  y :: x :: st) ->
-        if x = y then exec ins (1 :: st) else exec ins (0 :: st)
-      | (ILT       :: ins,  y :: x :: st) ->
-        if x < y then exec ins (1 :: st) else exec ins (0 :: st)
-      | (ILE       :: ins,  y :: x :: st) ->
-        if x <= y then exec ins (1 :: st) else exec ins (0 :: st)
-      | (IPOP      :: ins,  _ :: st)      -> exec ins st
-      | (ISWAP     :: ins,  y :: x :: st) -> exec ins (x :: y :: st)
-      | (IJMP l    :: _,    st)           -> exec (find l prog) st
-      | (IJMPIF l  :: _,    1 :: st)      -> exec (find l prog) st
-      | (IJMPIF l  :: ins,  _ :: st)      -> exec ins st
-      | (ICALL p   :: ILAB l :: _, st)    -> exec (find p prog) (l :: st)
-      | (ILAB  l   :: ins,  st)           -> exec ins st
-      | (IRETN     :: _,    l :: st)      -> exec (find l prog) st
-      | _                                 -> failwith "error executing code"
-  exec prog st
-
 
 let mutable labelCounter = 0
 let newLabel _ =
@@ -254,17 +168,3 @@ let compProg (funcs, e1) = // compiles functions
                                       [IRETN]                       
   compFuncs funcs                                          
 
-
-let div = compProg ([], NEG(INT 15))
-
-//let eq = compProg ([], IF(EQ(INT 1, INT 2), INT 4, INT 2))
-
-//let exL2 = compProg ([("foo", (["x"; "y"; "z"], MUL (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 10; INT 42; INT 11]))  
-
-//let exL1 = compProg ([("foo", (["x"], ADD (VAR "x", INT 42)))], CALL("foo", [INT 8]))          //<- works
-
-//let exL = compProg ([("foo", (["x"; "y"], ADD (VAR "x", VAR "y")))], CALL("foo", [INT 10; INT 42]))  
-         
-
- 
-execProg div []

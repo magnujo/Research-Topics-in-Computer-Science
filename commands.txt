@@ -1,7 +1,15 @@
 
 #r "parser.dll";; 
 #r "vm.dll";;
-#load "comptesting.fs";;
-open Comptesting;;
+#load "finaltest.fs";;
+open Finaltest;;
 let s = Parser.parseProgFromString;;
 let v = VM.execProg;;
+
+
+
+
+#r "parser.dll";; 
+#load "finaltest.fs";;
+open Finaltest;;
+let s = Parser.parseProgFromString;;
