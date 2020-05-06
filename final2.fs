@@ -25,6 +25,11 @@ let evalProg (funcs, e) =
     | DIV (e1, e2)       -> eval env e1 / eval env e2
     | MUL (e1, e2)       -> eval env e1 * eval env e2
     | VAR x              -> lookup x env
+    | LET (x, e1, e2)    -> let v1 = eval env e1
+                            eval ((x, v1) :: env) e2
+    | EQ (e1, e2)        -> if eval env e1 = eval env e2 then 1 else 0
+    | LT (e1, e2)        -> if eval env e1 < eval env e2 then 1 else 0
+    | IF (e1, e2, e3)    -> if eval env e1 = 1 then eval env e2 else eval env e3
     | CALL (f, [e1])     -> let v = eval env e1                              // evaluates the input to the function, which can be a sequence of exps (fx ADD(INT, INT)) 
                             let ([x], body) = lookup f funcs                // look for the function in the function env. Fx lookup "foo" in [("foo", ("x", ADD (VAR "x", INT 42)))] and add the variable name "x" to x and ADD (VAR "x", INT 42) to body
                             eval [(x, v)] body     
