@@ -1,10 +1,13 @@
-
+module Final2
 
 type varname  = string
 type funcname = string
 type exp      = | INT     of int                    // i
                 | ADD     of exp * exp            // e1 + e2
-                | VAR     of varname                // x
+                | VAR     of varname     
+                | SUB     of exp * exp    
+                | DIV     of exp * exp  
+                | MUL     of exp * exp         // x
                 | CALL    of funcname * exp list    // f ( e )                
 type func     = funcname * (varname list * exp)     // func f ( x ) = e
 
@@ -18,6 +21,9 @@ let evalProg (funcs, e) =
   let rec eval env = function
     | INT i              -> i
     | ADD (e1, e2)       -> eval env e1 + eval env e2
+    | SUB (e1, e2)       -> eval env e1 - eval env e2
+    | DIV (e1, e2)       -> eval env e1 / eval env e2
+    | MUL (e1, e2)       -> eval env e1 * eval env e2
     | VAR x              -> lookup x env
     | CALL (f, [e1])     -> let v = eval env e1                              // evaluates the input to the function, which can be a sequence of exps (fx ADD(INT, INT)) 
                             let ([x], body) = lookup f funcs                // look for the function in the function env. Fx lookup "foo" in [("foo", ("x", ADD (VAR "x", INT 42)))] and add the variable name "x" to x and ADD (VAR "x", INT 42) to body
@@ -35,7 +41,7 @@ let evalProg (funcs, e) =
                             eval (bind xs es) body                                         
   eval [] e                                              
 
-//evalProg ([("foo", (["x"; "y"; "z"], ADD (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
+evalProg ([("foo", (["x"; "y"; "z"], ADD (MUL(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
 
 type label = int
 type inst  = | IHALT
