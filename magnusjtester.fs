@@ -227,6 +227,7 @@ let compProg (funcs, e1) = // compiles functions
   compFuncs funcs       
 
 
+compProg ([], GT(INT 1, INT 2))
 
 let anda = compProg ([], IF(OR(EQ(INT 2, INT 2), EQ(INT 3, INT 4)), INT 4, INT 6))
 let neg = compProg ([], NEG(INT 15))
