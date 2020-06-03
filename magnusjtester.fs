@@ -31,8 +31,10 @@ type 'a env = (varname * 'a) list
 let rec lookup x = function
   | []            -> failwith ("unbound: " + x)
   | (y, w) :: env -> if x = y then w else lookup x env
-
-let evalProg (funcs, e) = 
+ 
+ 
+  //evalProg ([("foo", (["x"; "y"; "z"; "q"], ADD (ADD(VAR "x", VAR "y"), ADD(VAR "z", VAR "q"))))], CALL("foo", [INT 6; INT 5; INT 2; INT 100]))
+let evalProg (funcs, e) =         //funcs = [("foo", (["x"; "y"; "z"; "q"], ADD (ADD(VAR "x", VAR "y"), ADD(VAR "z", VAR "q"))))]  e =  CALL("foo", [INT 6; INT 5; INT 2; INT 100])    
   let rec eval env = function
     | INT i              -> i
     | ADD (e1, e2)       -> eval env e1 + eval env e2
@@ -40,7 +42,7 @@ let evalProg (funcs, e) =
     | DIV (e1, e2)       -> eval env e1 / eval env e2
     | MUL (e1, e2)       -> eval env e1 * eval env e2
     | VAR x              -> lookup x env
-    | LET (x, e1, e2)    -> let v1 = eval env e1
+    | LET (x, e1, e2)    -> let v1 = eval env e1   //local variable
                             eval ((x, v1) :: env) e2 
     | EQ (e1, e2)        -> if eval env e1 =  eval env e2 then 1 else 0
     | NEQ (e1, e2)       -> if eval env e1 <> eval env e2 then 1 else 0
@@ -50,22 +52,22 @@ let evalProg (funcs, e) =
     | GE (e1, e2)        -> if eval env e1 >= eval env e2 then 1 else 0
     | IF (e1, e2, e3)    -> if eval env e1 = 1 then eval env e2 else eval env e3                    //tjek op 
     | OR (e1, e2)        -> if eval env e1 = 1 then 1 else eval env e2                              //tjek op
-    | AND (e1, e2)       -> if eval env e1 = 1 then (if eval env e2 = 1 then 1 else 0) else 0                            //tjek op  if e1 then e2 else 0     
-    | CALL (f, es)       -> let rec bind xs es =
+    | AND (e1, e2)       -> if eval env e1 = 1 then (if eval env e2 = 1 then 1 else 0) else 0  // if eval env e1 = 1 then eval e2 else 0                            //tjek op  if e1 then e2 else 0     
+    | CALL (f, es)       -> let rec bind xs es =   //f = "foo" es = [INT 6; INT 5; INT 2; INT 100]
                                 match (xs, es) with
-                                  |([], []) -> []
-                                  |(x :: xs, e :: es) -> let v = eval env e 
-                                                         (x, v) :: bind xs es
-                            let (xs, body) = lookup f funcs
-                            eval (bind xs es) body                                          
+                                  |([], []) -> []   ("x", 6) :: ("y", 5) :: ("z", 2) :: ("q", 100) ::[]
+                                  |(x :: xs, e :: es) -> let v = eval env e   // v = 6 
+                                                         (x, v) :: bind xs es // x = "x" ("x", 6) :: ("y", 5) :: ("z", 2) :: ("q", 100) ::[]
+                            let (xs, body) = lookup f funcs  //xs = ["x"; "y"; "z"; "q"] body = ADD (ADD(VAR "x", VAR "y"), ADD(VAR "z", VAR "q"))
+                            eval (bind xs es) body                     
   eval [] e   
 
-(* let fourExp = ([("foo", (["x"; "y"; "z"; "q"], ADD (ADD(VAR "x", VAR "y"), ADD(VAR "z", VAR "q"))))], CALL("foo", [INT 6; INT 5; INT 2; INT 100]))
+let fourExp = ([("foo", (["x"; "y"; "z"; "q"], ADD (ADD(VAR "x", VAR "y"), ADD(VAR "z", VAR "q"))))], CALL("foo", [INT 6; INT 5; INT 2; INT 100]))
 let thrExp = ([("foo", (["x"; "y"; "z"], ADD (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 6; INT 5; INT 2]))
 let twoExp = ([("foo", (["x"; "y"], ADD (VAR "x", VAR "y")))], CALL("foo", [INT 6; INT 5])) // <
 let oneExp = ([("foo", (["x"], ADD (VAR "x", INT 1)))], CALL("foo", [INT 6]))
 
-evalProg fourExp *)
+evalProg LET(VAR "x", INT 6, INT 10) 
 
 type label = int
 type inst  = | IHALT
