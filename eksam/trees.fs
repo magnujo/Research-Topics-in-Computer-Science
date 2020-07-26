@@ -1,6 +1,6 @@
 //1a
 
-//Træer med 3 "grene"
+//Træ def
 type 'a tree = | LEAF
                | NODE of 'a * 'a tree * 'a tree 
 
@@ -23,6 +23,7 @@ let rec countLeaves = function
   | NODE (x, l, LEAF) -> 1 + countLeaves l 
   | NODE (x, l, r) -> (countLeaves l) + (countLeaves r) 
 
+
 let rec countNodes = function
     | LEAF -> 0 
     | NODE (x, l, r) -> 1 + (countNodes l) + (countNodes r) 
@@ -40,7 +41,7 @@ sum t
 
 let rec product = function 
     |LEAF -> 1 
-    |NODE (x, l, r) -> x*sum l * sum r 
+    |NODE (x, l, r) -> x* sum l * sum r 
 
 product t
 
@@ -50,13 +51,11 @@ let rec double = function
     |NODE (x, l, r) -> NODE (x*2, double l, double r)
  
 
-
 let rec depth = function 
   | LEAF           -> 0 
   | NODE (x, l, r) -> 1 + max (depth l) (depth r)
 
 // In-order traversal
-    
 let rec inorder = function 
   | LEAF           -> []
   | NODE (x, l, r) -> inorder l @ [x] @ inorder r

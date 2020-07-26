@@ -1,10 +1,6 @@
 //Lister i F#
 
-(* The list type
-Creating lists
-Function that take lists as input or produce lists as output
-Common built-in functions on lists *)
-
+//Lister
 
 //Creating lists
 let l = [1; 2; 3]
@@ -27,6 +23,7 @@ let rec append xs ys =
     | []      -> ys
     | x :: xs -> x :: append xs ys
 
+append [1;2] [3;4]
 
 //Common built-in functions on lists 
 
