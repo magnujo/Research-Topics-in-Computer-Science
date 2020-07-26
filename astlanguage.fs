@@ -63,7 +63,6 @@ let thrExp = ([("foo", (["x"; "y"; "z"], ADD (ADD(VAR "x", VAR "y"), VAR "z")))]
 let twoExp = ([("foo", (["x"; "y"], ADD (VAR "x", VAR "y")))], CALL("foo", [INT 6; INT 5])) // <
 let oneExp = ([("foo", (["x"], ADD (VAR "x", INT 1)))], CALL("foo", [INT 6]))
 
-evalProg ([], LET("x", INT 6, VAR "x"))
 
 type label = int
 type inst  = | IHALT
@@ -224,43 +223,3 @@ let compProg (funcs, e1) = // compiles functions
                                       [ISWAP]                  @    
                                       [IRETN]                       
   compFuncs funcs       
-
-
-compProg ([], GT(INT 1, INT 2))
-
-let anda = compProg ([], IF(OR(EQ(INT 2, INT 2), EQ(INT 3, INT 4)), INT 4, INT 6))
-let neg = compProg ([], NEG(INT 15))
-
-let eq = compProg ([], IF(EQ(INT 1, INT 2), INT 4, INT 2))
-
-let exL2 = compProg ([("foo", (["x"; "y"; "z"], MUL (ADD(VAR "x", VAR "y"), VAR "z")))], CALL("foo", [INT 10; INT 42; INT 11]))  
-
-let exL1 = compProg ([("foo", (["x"], ADD (VAR "x", INT 42)))], CALL("foo", [INT 8]))          //<- works
-
-let exL = compProg ([("foo", (["x"; "y"], ADD (VAR "x", VAR "y")))],CALL("foo", [INT 10; INT 42]))  
-
-let subtest = compProg ([], NEG (INT 1))
-
-let neqtest = compProg ([], NEQ(INT 2, INT 2))
- 
-let addtest = compProg ([], LET("x", INT 2, LET("y", INT 3, ADD (VAR "x", VAR "y")) ))
-
-let andtest = compProg ([], AND(EQ(INT 1, INT 1), EQ(INT 2, INT 2)))
-execProg exL []
-
-
-
-//   [IPUSH 10; IPUSH 42; ICALL 14; ILAB 15; ISWAP; IPOP; ISWAP; IPOP; IHALT;
-//   ILAB 14; IGET 1; IGET 3; IADD; ISWAP; IRETN]
-// 10
-// 42 10
-// 15 42 10
-// 42 15 42 10
-// 10 42 15 42 10
-// 52 15 42 10
-// 15 52 42 10
-// 52 42 10
-// 42 52 10
-// 52 10
-// 10 52
-// 52
