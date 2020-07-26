@@ -21,7 +21,7 @@ let rec upto (m, n) =
   else
     m :: upto (m + 1, n)
 
-// Quicksort
+// Sorting
 
 let rec partition p = function
   | []      -> ([], [])
@@ -29,9 +29,7 @@ let rec partition p = function
                if y <= p then
                  (y :: l, r)
                else
-                 (l, y :: r)
-
-               
+                 (l, y :: r)               
 
 let rec sort = function
   | []        -> []
@@ -39,21 +37,6 @@ let rec sort = function
   | x :: xs   -> let (l,r) = partition x xs
                  sort l @ [x] @ sort r
 
-sort [2;1;10;5;4;33]
-
-
-(* 
-sort 2::1::[] --> (l,r) = partition 2 1::[] = (1::[], [])
-                         sort l @ 2 @ sort r = sort 1::[] @ 2 @ sort [] = 1::[] @ 2 @ [] = 1::2::[]
-partition 2 1::[] --> (l, r) = partition 2 [] =([], [])
-                      (1::l, r) = (1::[], [])
-partition 2 [] ---> ([], [])
-
-sort 1::[] --> 1::[]
-sort [] --> []
- *)
-
-// merge sort
 
 let rec split = function
   | []      -> ([], [])
@@ -61,7 +44,7 @@ let rec split = function
   | x1 :: x2 :: xs -> let (l, r) = split xs
                       (x1 :: l, x2 :: r)
 
-// Ex 5(a)
+
 let rec isWeaklyAscending = function
   | []             -> true
   | [x1]           -> true
@@ -88,7 +71,6 @@ let rec union xs ys =
     | ([], ys) -> ys
     | (xs, []) -> xs
 
-// Ex 6
 
 let rec mergesort = function
   | []   -> []
@@ -97,7 +79,7 @@ let rec mergesort = function
             union (mergesort l) (mergesort r)
 
 
-//search
+//Searching
 let rec maxSearch max =  function
         | []      -> max
         | x :: xs -> if x > max then maxSearch x xs else maxSearch max xs

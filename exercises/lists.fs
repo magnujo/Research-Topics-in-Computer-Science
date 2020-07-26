@@ -1,13 +1,10 @@
 //Lister i F#
 
-//Lister
-
 //Creating lists
 let l = [1; 2; 3]
 let l' = 1::2::3::[]
 let tail = [4; 5]
 let lt = 1::2::3::tail
-
 
 //list functions
 let rec len = function 
@@ -23,9 +20,6 @@ let rec append xs ys =
     | []      -> ys
     | x :: xs -> x :: append xs ys
 
-append [1;2] [3;4]
-
 //Common built-in functions on lists 
-
 let fenv = List.map (fun (f, _) -> (f, newLabel())) funcs
 let get = List.item

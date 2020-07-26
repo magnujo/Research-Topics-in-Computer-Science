@@ -18,13 +18,10 @@ let p = function
     | 0 -> "false"
     | 1 -> "true"
 
-p (eq 11 10) 
-
 //recursive function
 let rec sumupTo = function
     |0 -> 0
     |n -> n + sumupTo(n - 1)
-
 
 //types (sets of values)
 type weekday = | MONDAY    | TUESDAY   | WEDNESDAY   | THURSDAY
